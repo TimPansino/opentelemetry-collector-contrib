@@ -60,6 +60,7 @@ func TestLoadConfig(t *testing.T) {
 		},
 		MetricsURLOverride: "http://alt.metrics.newrelic.com",
 		SpansURLOverride:   "http://alt.spans.newrelic.com",
+		InsecureSkipVerify: true,
 	})
 
 	nrConfig := new(telemetry.Config)

@@ -15,6 +15,8 @@
 package newrelicexporter
 
 import (
+	"crypto/tls"
+	"net/http"
 	"time"
 
 	"github.com/newrelic/newrelic-telemetry-sdk-go/telemetry"
@@ -40,6 +42,9 @@ type Config struct {
 	// MetricsURLOverride overrides the metrics endpoint.
 	MetricsURLOverride string `mapstructure:"metrics_url_override"`
 
+	// InsecureSkipVerify sets the http transport to InsecureSkipVerify: true.
+	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify"`
+
 	// SpansURLOverride overrides the spans endpoint.
 	SpansURLOverride string `mapstructure:"spans_url_override"`
 }
@@ -55,4 +60,25 @@ func (c Config) HarvestOption(cfg *telemetry.Config) {
 	cfg.ProductVersion = version
 	cfg.MetricsURLOverride = c.MetricsURLOverride
 	cfg.SpansURLOverride = c.SpansURLOverride
+
+	if c.InsecureSkipVerify {
+		// No error logger is configured by this point and this is
+		// primarily for testing use, so a panic is acceptable.
+
+		if cfg.Client == nil {
+			cfg.Client = &http.Client{}
+			cfg.Client.Transport = http.DefaultTransport.(*http.Transport).Clone()
+		} else if cfg.Client.Transport == nil {
+			cfg.Client.Transport = http.DefaultTransport.(*http.Transport)
+		}
+
+		customTransport := cfg.Client.Transport.(*http.Transport).Clone()
+		if customTransport.TLSClientConfig == nil {
+			customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		} else {
+			customTransport.TLSClientConfig.InsecureSkipVerify = true
+		}
+
+		cfg.Client.Transport = customTransport
+	}
 }

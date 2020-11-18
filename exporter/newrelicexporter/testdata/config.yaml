@@ -15,6 +15,7 @@ exporters:
       weight: 3
     metrics_url_override: http://alt.metrics.newrelic.com
     spans_url_override: http://alt.spans.newrelic.com
+    insecure_skip_verify: true
 
 service:
   pipelines:
